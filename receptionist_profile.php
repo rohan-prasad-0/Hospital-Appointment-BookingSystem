@@ -4,7 +4,7 @@ require_once "db_connection.php";
 
 // Check if user is logged in as receptionist
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Receptionist') {
-    header("Location: login_1.php");
+    header("Location: login.php");
     exit();
 }
 

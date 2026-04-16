@@ -4,7 +4,7 @@ require_once "db_connection.php";
 
 // Check if user is logged in as admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Admin') {
-    header("Location: login_1.php");
+    header("Location: login.php");
     exit();
 }
 
@@ -93,6 +93,24 @@ $doctors_rs = $mysqli->query($doctors_sql);
                         // Check if doctor has appointments
                         $appointment_check = $mysqli->query("SELECT COUNT(*) as total FROM appointment WHERE doctor_id = {$doctor['doctor_id']}");
                         $appointment_count = $appointment_check->fetch_assoc()['total'];
+                        
+                        // Check if doctor has schedules
+                        $schedule_check = $mysqli->query("SELECT COUNT(*) as total FROM doctor_schedule WHERE doctor_id = {$doctor['doctor_id']}");
+                        $schedule_count = $schedule_check->fetch_assoc()['total'];
+                        
+                        // Determine if doctor can be deleted (no appointments AND no schedules)
+                        $can_delete = ($appointment_count == 0 && $schedule_count == 0);
+                        $delete_disabled_reason = "";
+                        
+                        if (!$can_delete) {
+                            if ($appointment_count > 0 && $schedule_count > 0) {
+                                $delete_disabled_reason = "Has $appointment_count appointment(s) and $schedule_count schedule(s)";
+                            } elseif ($appointment_count > 0) {
+                                $delete_disabled_reason = "Has $appointment_count appointment(s)";
+                            } else {
+                                $delete_disabled_reason = "Has $schedule_count schedule(s)";
+                            }
+                        }
                     ?>
                         <div class="col-md-6 col-lg-4">
                             <div class="stat-card">
@@ -101,9 +119,9 @@ $doctors_rs = $mysqli->query($doctors_sql);
                                         <i class="bi bi-person-fill"></i>
                                     </div>
                                     <div>
-                                        <h5 class="fw-bold mb-1">Dr. <?= $doctor['name'] ?></h5>
+                                        <h5 class="fw-bold mb-1">Dr. <?= htmlspecialchars($doctor['name']) ?></h5>
                                         <span class="specialization-badge">
-                                            <i class="bi bi-stethoscope me-1"></i><?= $doctor['sp_name'] ?>
+                                            <i class="bi bi-stethoscope me-1"></i><?= htmlspecialchars($doctor['sp_name']) ?>
                                         </span>
                                     </div>
                                 </div>
@@ -111,16 +129,35 @@ $doctors_rs = $mysqli->query($doctors_sql);
                                 <div class="mb-3">
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="bi bi-envelope text-primary me-2"></i>
-                                        <small class="text-muted"><?= $doctor['email'] ?></small>
+                                        <small class="text-muted"><?= htmlspecialchars($doctor['email']) ?></small>
                                     </div>
                                     <div class="d-flex align-items-center mb-2">
                                         <i class="bi bi-telephone text-primary me-2"></i>
-                                        <small class="text-muted"><?= $doctor['phone'] ?? 'N/A' ?></small>
+                                        <small class="text-muted"><?= htmlspecialchars($doctor['phone'] ?? 'N/A') ?></small>
                                     </div>
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-gender-<?= strtolower($doctor['gender'] ?? 'male') ?> text-primary me-2"></i>
-                                        <small class="text-muted"><?= $doctor['gender'] ?? 'N/A' ?></small>
+                                        <small class="text-muted"><?= htmlspecialchars($doctor['gender'] ?? 'N/A') ?></small>
                                     </div>
+                                </div>
+                                
+                                <!-- Appointment and Schedule Status Badges -->
+                                <div class="mb-3 d-flex gap-2">
+                                    <?php if ($appointment_count > 0): ?>
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-calendar-event me-1"></i><?= $appointment_count ?> Appointment(s)
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if ($schedule_count > 0): ?>
+                                        <span class="badge bg-info text-dark">
+                                            <i class="bi bi-clock-history me-1"></i><?= $schedule_count ?> Schedule(s)
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php if ($appointment_count == 0 && $schedule_count == 0): ?>
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Can Delete
+                                        </span>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="d-flex gap-2">
@@ -132,22 +169,35 @@ $doctors_rs = $mysqli->query($doctors_sql);
                                        class="btn-action btn-view">
                                         <i class="bi bi-calendar-check me-1"></i>Appointments
                                     </a>
-                                    <?php if ($appointment_count == 0): ?>
+                                    <a href="admin_view_schedules.php?doctor_id=<?= $doctor['doctor_id'] ?>" 
+                                       class="btn-action btn-info">
+                                        <i class="bi bi-clock me-1"></i>Schedules
+                                    </a>
+                                    <?php if ($can_delete): ?>
                                         <button type="button" class="btn-action btn-delete" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#deleteDoctorModal<?= $doctor['doctor_id'] ?>">
                                             <i class="bi bi-trash me-1"></i>Delete
                                         </button>
                                     <?php else: ?>
-                                        <button class="btn-action btn-delete" disabled>
+                                        <button class="btn-action btn-delete" disabled 
+                                                title="<?= htmlspecialchars($delete_disabled_reason) ?>">
                                             <i class="bi bi-trash me-1"></i>Delete
                                         </button>
                                     <?php endif; ?>
                                 </div>
+                                
+                                <?php if (!$can_delete): ?>
+                                    <small class="text-danger d-block mt-2">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        <?= htmlspecialchars($delete_disabled_reason) ?>
+                                    </small>
+                                <?php endif; ?>
                             </div>
                         </div>
 
-                        <!-- Delete Doctor Modal -->
+                        <!-- Delete Doctor Modal (only shown if doctor can be deleted) -->
+                        <?php if ($can_delete): ?>
                         <div class="modal fade" id="deleteDoctorModal<?= $doctor['doctor_id'] ?>" tabindex="-1">
                             <div class="modal-dialog">
                                 <div class="modal-content">
@@ -159,19 +209,19 @@ $doctors_rs = $mysqli->query($doctors_sql);
                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <p>Are you sure you want to delete <strong>Dr. <?= $doctor['name'] ?></strong>?</p>
+                                        <p>Are you sure you want to delete <strong>Dr. <?= htmlspecialchars($doctor['name']) ?></strong>?</p>
                                         <div class="bg-light p-3 rounded-3">
                                             <div class="d-flex align-items-center mb-2">
                                                 <i class="bi bi-envelope text-danger me-2"></i>
-                                                <span><?= $doctor['email'] ?></span>
+                                                <span><?= htmlspecialchars($doctor['email']) ?></span>
                                             </div>
                                             <div class="d-flex align-items-center mb-2">
                                                 <i class="bi bi-stethoscope text-danger me-2"></i>
-                                                <span><?= $doctor['sp_name'] ?></span>
+                                                <span><?= htmlspecialchars($doctor['sp_name']) ?></span>
                                             </div>
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-telephone text-danger me-2"></i>
-                                                <span><?= $doctor['phone'] ?? 'N/A' ?></span>
+                                                <span><?= htmlspecialchars($doctor['phone'] ?? 'N/A') ?></span>
                                             </div>
                                         </div>
                                         <p class="text-danger mt-3 mb-0">
@@ -191,6 +241,7 @@ $doctors_rs = $mysqli->query($doctors_sql);
                                 </div>
                             </div>
                         </div>
+                        <?php endif; ?>
                     <?php endwhile; ?>
                 </div>
             <?php else: ?>

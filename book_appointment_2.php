@@ -4,7 +4,7 @@ include "db_connection.php";
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'Patient') {
-    header("Location: login_1.php");
+    header("Location: login.php");
     exit();
 }
 
