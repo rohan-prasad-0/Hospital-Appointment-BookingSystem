@@ -10,3 +10,28 @@
 
 <img width="1867" height="949" alt="d dash" src="https://github.com/user-attachments/assets/4e861682-6eba-43bb-a041-6204667b997d" />
 
+# Add SQL File
+
+#Website login credentials
+
+Patient
+alex@gmail.com
+password - test
+--------------
+Admin
+admin@gmail.com
+password - admin
+--------------
+Doctor
+jenny@gmail.com
+password - test
+bathiya@gmail.com
+password - bathiya123
+uvindu@gmail.com
+password - uvindu123
+supun@gmail.com
+password - supun123
+--------------
+Receptionist
+jack@gmail.com
+password - admin
