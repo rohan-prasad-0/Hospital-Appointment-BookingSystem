@@ -25,10 +25,13 @@ password - admin
 Doctor
 jenny@gmail.com
 password - test
+
 bathiya@gmail.com
 password - bathiya123
+
 uvindu@gmail.com
 password - uvindu123
+
 supun@gmail.com
 password - supun123
 --------------
