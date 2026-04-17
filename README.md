@@ -20,7 +20,7 @@ alex@gmail.com
 password - test
 
 --------------
-Admin
+# Admin
 
 admin@gmail.com
 password - admin
