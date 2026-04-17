@@ -12,17 +12,22 @@
 
 # Add SQL File
 
-#Website login credentials
+# Website login credentials
 
-Patient
+# Patient
+
 alex@gmail.com
 password - test
+
 --------------
 Admin
+
 admin@gmail.com
 password - admin
+
 --------------
-Doctor
+# Doctor
+
 jenny@gmail.com
 password - test
 
@@ -34,7 +39,9 @@ password - uvindu123
 
 supun@gmail.com
 password - supun123
+
 --------------
-Receptionist
+# Receptionist
+
 jack@gmail.com
 password - admin
